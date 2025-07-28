@@ -7,10 +7,6 @@ import mjolnir from '../../resources/img/mjolnir.png';
 import MarvelService from '../../services/MarvelService';
 
 class RandomChar extends Component {
-    constructor(props) {
-        super(props);
-        this.upDateChar();
-    }
 
     state = {
         char: {},
@@ -19,6 +15,21 @@ class RandomChar extends Component {
     }
 
     marvelService = new MarvelService();
+
+    componentDidMount() {
+        this.upDateChar();
+        // this.timerId = setInterval(this.upDateChar, 3000);
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.timerId);
+    }
+
+    onCharLoading = () => {
+        this.setState({
+            loading: true
+        })
+    }
 
     onCharLoaded = (char) => {
         this.setState({
@@ -36,6 +47,7 @@ class RandomChar extends Component {
 
     upDateChar = () => {
         const id = Math.floor(Math.random() * (20 - 1) + 1);
+        this.onCharLoading();
         this.marvelService
             .getCharacters(id)
             .then(this.onCharLoaded)
@@ -61,7 +73,8 @@ class RandomChar extends Component {
                     <p className="randomchar__title">
                         Or choose another one
                     </p>
-                    <button className="button button__main">
+                    <button className="button button__main"
+                        onClick={this.upDateChar}>
                         <div className="inner">try it</div>
                     </button>
                     <img src={mjolnir} alt="mjolnir" className="randomchar__decoration" />
