@@ -4,47 +4,31 @@ import ErrorMessage from '../errorMessage/errorMessage';
 
 import './randomChar.scss';
 import mjolnir from '../../resources/img/mjolnir.png';
-import MarvelService from '../../services/MarvelService';
+import useMarvelService from '../../services/MarvelService';
 
 const RandomChar = () => {
 
     const [char, setChar] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(false);
-
-    const marvelService = new MarvelService();
+    const { loading, error, getCharacters, clearError } = useMarvelService();
 
     useEffect(() => {
         upDateChar();
-        const timerId = setInterval(upDateChar, 3000);
+        const timerId = setInterval(upDateChar, 60000);
 
         return () => {
             clearInterval(timerId);
         }
-
     }, [])
-
-    const onCharLoading = () => {
-        setLoading(true);
-    }
 
     const onCharLoaded = (char) => {
         setChar(char);
-        setLoading(false)
-    }
-
-    const onError = () => {
-        setLoading(false);
-        setError(true);
     }
 
     const upDateChar = () => {
+        clearError();
         const id = Math.floor(Math.random() * (20 - 1) + 1);
-        onCharLoading();
-        marvelService
-            .getCharacters(id)
+        getCharacters(id)
             .then(onCharLoaded)
-            .catch(onError);
     }
 
     const errorMessage = error ? <ErrorMessage /> : null;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import MarvelService from '../../services/MarvelService';
 import PropTypes from 'prop-types';
 
+import useMarvelService from '../../services/MarvelService';
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/errorMessage';
 import Skeleton from '../skeleton/Skeleton';
@@ -11,42 +11,29 @@ import './charInfo.scss';
 const CharInfo = (props) => {
 
     const [char, setChar] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(false);
 
-    const marvelService = new MarvelService();
+    const { loading, error, getCharacters, clearError } = useMarvelService();
 
     useEffect(() => {
-        upDateChar();
+        updateChar()
     }, [props.charId])
 
-    const upDateChar = () => {
+    const updateChar = () => {
         const { charId } = props;
         if (!charId) {
             return;
         }
-        onCharLoading();
-        marvelService
-            .getCharacters(charId)
-            .then(onCharLoaded)
-            .catch(onError)
-    }
 
-    const onCharLoading = () => {
-        setLoading(true);
+        clearError();
+        getCharacters(charId)
+            .then(onCharLoaded)
     }
 
     const onCharLoaded = (char) => {
         setChar(char);
-        setLoading(false);
     }
 
-    const onError = () => {
-        setLoading(false);
-        setError(true);
-    }
-
-    const skeleton = char || loading || error ? null : <Skeleton />
+    const skeleton = char || loading || error ? null : <Skeleton />;
     const errorMessage = error ? <ErrorMessage /> : null;
     const spinner = loading ? <Spinner /> : null;
     const content = !(loading || error || !char) ? <View char={char} /> : null;
@@ -66,12 +53,12 @@ const View = ({ char }) => {
     return (
         <>
             <div className="char__basics">
-                <img src={thumbnail} alt="abyss" />
+                <img src={thumbnail} alt={name} />
                 <div>
                     <div className="char__info-name">{name}</div>
                     <div className="char__btns">
                         <a href={homepage} className="button button__main">
-                            <div className="inner">Homepage</div>
+                            <div className="inner">homepage</div>
                         </a>
                         <a href={wiki} className="button button__secondary">
                             <div className="inner">Wiki</div>
@@ -87,10 +74,11 @@ const View = ({ char }) => {
                 {comics.length > 0 ? null : 'There is no comics with this character'}
                 {
                     comics.map((item, i) => {
+                        // eslint-disable-next-line
                         if (i > 9) return;
                         return (
-                            <li key={i} className="char__comics-item" >
-                                {item}
+                            <li key={i} className="char__comics-item">
+                                {item.name}
                             </li>
                         )
                     })
