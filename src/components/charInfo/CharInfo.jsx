@@ -1,81 +1,51 @@
-import { Component } from 'react';
-import MarvelService from '../../services/MarvelService';
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
+import useMarvelService from '../../services/MarvelService';
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/errorMessage';
 import Skeleton from '../skeleton/Skeleton';
 
 import './charInfo.scss';
 
-class CharInfo extends Component {
-    state = {
-        char: null,
-        loading: false,
-        error: false
-    }
+const CharInfo = (props) => {
 
-    marvelService = new MarvelService();
+    const [char, setChar] = useState(null);
 
-    componentDidMount() {
-        this.upDateChar();
-    }
+    const { loading, error, getCharacters, clearError } = useMarvelService();
 
-    componentDidUpdate(prevProps) {
-        if (this.props.charId !== prevProps.charId) {
-            this.upDateChar();
-        }
-    }
+    useEffect(() => {
+        updateChar()
+    }, [props.charId])
 
-    upDateChar = () => {
-        const { charId } = this.props;
+    const updateChar = () => {
+        const { charId } = props;
         if (!charId) {
             return;
         }
-        this.onCharLoading();
-        this.marvelService
-            .getCharacters(charId)
-            .then(this.onCharLoaded)
-            .catch(this.onError)
+
+        clearError();
+        getCharacters(charId)
+            .then(onCharLoaded)
     }
 
-    onCharLoading = () => {
-        this.setState({
-            loading: true
-        })
+    const onCharLoaded = (char) => {
+        setChar(char);
     }
 
-    onCharLoaded = (char) => {
-        this.setState({
-            char,
-            loading: false
-        })
-    }
+    const skeleton = char || loading || error ? null : <Skeleton />;
+    const errorMessage = error ? <ErrorMessage /> : null;
+    const spinner = loading ? <Spinner /> : null;
+    const content = !(loading || error || !char) ? <View char={char} /> : null;
 
-    onError = () => {
-        this.setState({
-            loading: false,
-            error: true
-        })
-    }
-
-    render() {
-        const { char, loading, error } = this.state;
-
-        const skeleton = char || loading || error ? null : <Skeleton />
-        const errorMessage = error ? <ErrorMessage /> : null;
-        const spinner = loading ? <Spinner /> : null;
-        const content = !(loading || error || !char) ? <View char={char} /> : null;
-
-        return (
-            <div className="char__info">
-                {skeleton}
-                {errorMessage}
-                {spinner}
-                {content}
-            </div>
-        )
-    }
+    return (
+        <div className="char__info">
+            {skeleton}
+            {errorMessage}
+            {spinner}
+            {content}
+        </div>
+    )
 }
 
 const View = ({ char }) => {
@@ -83,12 +53,12 @@ const View = ({ char }) => {
     return (
         <>
             <div className="char__basics">
-                <img src={thumbnail} alt="abyss" />
+                <img src={thumbnail} alt={name} />
                 <div>
                     <div className="char__info-name">{name}</div>
                     <div className="char__btns">
                         <a href={homepage} className="button button__main">
-                            <div className="inner">Homepage</div>
+                            <div className="inner">homepage</div>
                         </a>
                         <a href={wiki} className="button button__secondary">
                             <div className="inner">Wiki</div>
@@ -104,10 +74,11 @@ const View = ({ char }) => {
                 {comics.length > 0 ? null : 'There is no comics with this character'}
                 {
                     comics.map((item, i) => {
+                        // eslint-disable-next-line
                         if (i > 9) return;
                         return (
-                            <li key={i} className="char__comics-item" >
-                                {item}
+                            <li key={i} className="char__comics-item">
+                                {item.name}
                             </li>
                         )
                     })
